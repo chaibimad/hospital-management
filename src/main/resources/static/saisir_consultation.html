@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Saisie Consultation</title>
+    <style>
+        body { font-family: sans-serif; padding: 0; margin: 0; background: #eee; }
+        .form-card { background: white; padding: 25px; border-radius: 8px; max-width: 600px; margin: auto; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+        .btn-submit { background: #2980b9; color: white; border: none; padding: 10px 20px; margin-top: 20px; cursor: pointer; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="form-card">
+        <h2>Consultation : <span th:text="${patient.nom}"></span></h2>
+        <p style="margin:0 0 10px 0; color:#7f8c8d;">
+            Patient: <strong th:text="${'#' + patient.id + ' - ' + patient.nom + ' ' + patient.prenom}">Patient</strong>
+            <a th:href="@{/medecin/patient/{id}/dossier(id=${patient.id})}" style="margin-left:12px; text-decoration:none; color:#3498db; font-weight:bold;">📁 Dossier complet</a>
+        </p>
+        <form th:action="@{/medecin/save-consultation}" method="post">
+            <input type="hidden" name="patientId" th:value="${patient.id}">
+            <input type="hidden" name="rdvId" th:value="${rdv.id}">
+            <label>Antécédents du patient :</label>
+            <textarea name="antecedents" th:text="${dossier.antecedents}"></textarea>
+            <label>Diagnostic :</label>
+            <textarea name="diagnostic" required></textarea>
+            <label>Observations :</label>
+            <textarea name="observations" placeholder="Notes cliniques..."></textarea>
+            <button type="submit" class="btn-submit">Valider et Enregistrer</button>
+        </form>
+
+        <div style="margin-top:22px; border-top: 1px solid #e5e5e5; padding-top:14px;">
+            <h3 style="margin:0 0 10px 0;">🕒 Historique des consultations</h3>
+            <div th:if="${consultations == null or #lists.isEmpty(consultations)}" style="color:#95a5a6;">Aucune consultation précédente.</div>
+            <div th:each="c : ${consultations}" style="margin-bottom:10px; padding:10px; background:#f7f7f7; border-radius:8px;">
+                <div style="font-weight:bold;">
+                    <span th:text="${#temporals.format(c.date, 'dd/MM/yyyy HH:mm')}">--</span>
+                </div>
+                <div><strong>Diagnostic:</strong> <span th:text="${c.diagnostic}">-</span></div>
+                <div th:if="${c.observations != null and !#strings.isEmpty(c.observations)}"><strong>Obs:</strong> <span th:text="${c.observations}">-</span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

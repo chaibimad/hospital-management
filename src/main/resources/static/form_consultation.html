@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Nouvelle Consultation</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; padding: 40px; display: flex; justify-content: center; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #27ae60; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        textarea { width: 100%; height: 120px; padding: 10px; border-radius: 6px; border: 1px solid #ccc; resize: none; }
+        .btn-save { background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📝 Enregistrer la Consultation</h2>
+        <form action="/medecin/consultation/save" method="POST">
+            <input type="hidden" name="rdvId" th:value="${rdvId}">
+            
+            <div class="form-group">
+                <label>Observations cliniques :</label>
+                <textarea name="observations" placeholder="Saisissez les symptômes observés..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Diagnostic final :</label>
+                <textarea name="diagnostic" placeholder="Saisissez votre diagnostic..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-save">Enregistrer et Terminer</button>
+        </form>
+    </div>
+</body>
+</html>

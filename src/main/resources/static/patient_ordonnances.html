@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes ordonnances</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #16a085; color: white; }
+        .back { display: inline-block; margin-bottom: 15px; color: #3498db; text-decoration: none; }
+        .back:hover { text-decoration: underline; }
+        .pill { display:inline-block; padding:4px 10px; border-radius: 20px; background:#ecf0f1; color:#2c3e50; font-size:12px; font-weight:700; }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="container">
+        <h1>Mes ordonnances</h1>
+        <p style="color:#7f8c8d;" th:if="${patient != null}">
+            Patient: <strong th:text="${patient.nom + ' ' + patient.prenom}">-</strong>
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Consultation</th>
+                    <th>Médicaments</th>
+                    <th>Posologie</th>
+                    <th>Durée</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="p : ${prescriptions}">
+                    <td>
+                        <span class="pill" th:text="${p.consultation != null && p.consultation.date != null ? #temporals.format(p.consultation.date, 'dd/MM/yyyy HH:mm') : 'Consultation'}">Consultation</span>
+                        <div style="margin-top:6px; color:#7f8c8d;" th:if="${p.consultation != null && p.consultation.medecin != null}">
+                            Médecin: <span th:text="${p.consultation.medecin.nom + ' ' + p.consultation.medecin.prenom}">-</span>
+                        </div>
+                    </td>
+                    <td th:text="${p.medicaments}">-</td>
+                    <td th:text="${p.posologie}">-</td>
+                    <td th:text="${p.dureeTraitement + ' jours'}">-</td>
+                </tr>
+                <tr th:if="${prescriptions == null or #lists.isEmpty(prescriptions)}">
+                    <td colspan="4" style="text-align:center; color:#7f8c8d;">Aucune ordonnance disponible.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

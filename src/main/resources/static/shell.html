@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle : 'SIH'}">SIH</title>
+    <style>
+        :root { --sidebar-bg: #2c3e50; --active-blue: #3498db; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f4f7f9; }
+
+        .app-sidebar { width: 280px; height: 100vh; background: var(--sidebar-bg); color: white; padding: 20px; position: fixed; left: 0; top: 0; overflow: auto; }
+        .app-brand { font-size: 22px; font-weight: 700; margin: 6px 0 18px 0; }
+        .app-nav { margin-top: 14px; }
+        .app-nav a { color: white; text-decoration: none; display:block; padding:10px; border-radius: 6px; margin-top:10px; }
+        .app-nav a:hover { background: rgba(255,255,255,0.08); }
+        .app-nav a.is-active { background: var(--active-blue); }
+        .app-nav a.is-danger { color: var(--danger); }
+
+        .app-main { margin-left: 280px; flex-grow: 1; padding: 40px; min-height: 100vh; }
+        .app-content { width: 100%; }
+
+        .app-loading { display:none; position: fixed; left: 280px; top: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--active-blue), var(--success)); animation: appbar 1s linear infinite; }
+        @keyframes appbar { 0% { transform: translateX(-40%); } 100% { transform: translateX(40%); } }
+    </style>
+</head>
+<body>
+
+    <aside class="app-sidebar">
+        <div class="app-brand" id="appBrand" th:text="${(sidebarTitle != null ? sidebarTitle : 'Hôpital') + (session.userNom != null ? ' : ' + session.userNom : '')}">Hôpital</div>
+
+        <nav class="app-nav" id="appNav">
+            <a data-nav="1" data-roles="ADMIN" href="/dashboard">📊 Tableau de bord</a>
+            <a data-nav="1" data-roles="ADMIN" href="/admin/journal">📜 Journal</a>
+            <a data-nav="1" data-roles="ADMIN" href="/admin/rapports">📈 Rapports</a>
+
+            <a data-nav="1" data-roles="SECRETAIRE" href="/secretaire/patients">👥 Patients</a>
+            <a data-nav="1" data-roles="SECRETAIRE" href="/secretaire/agenda">🗓️ Agenda</a>
+            <a data-nav="1" data-roles="SECRETAIRE" href="/secretaire/paiements">💳 Paiements</a>
+            <a data-nav="1" data-roles="SECRETAIRE" href="/secretaire/facture/nouvelle">🧾 Facture</a>
+
+            <a data-nav="1" data-roles="MEDECIN" href="/medecin/dashboard">📊 Tableau de bord</a>
+            <a data-nav="1" data-roles="MEDECIN" href="/medecin/agenda">🗓️ Agenda</a>
+
+            <a data-nav="1" data-roles="PATIENT" href="/patient/space">🏠 Accueil</a>
+            <a data-nav="1" data-roles="PATIENT" href="/patient/dossier">📁 Dossier</a>
+            <a data-nav="1" data-roles="PATIENT" href="/patient/ordonnances">🧾 Ordonnances</a>
+            <a data-nav="1" data-roles="PATIENT" href="/patient/factures">💰 Factures</a>
+            <a data-nav="1" data-roles="PATIENT" href="/patient/profil">✏️ Profil</a>
+            <a data-nav="1" data-roles="PATIENT" href="/prendre_rdv.html">📅 Rendez-vous</a>
+
+            <a data-nav="1" data-roles="ADMIN,SECRETAIRE,MEDECIN,PATIENT" href="/user/password">🔒 Changer mot de passe</a>
+
+            <a class="is-danger" href="/logout" style="display:block; margin-top:50px;">🚪 Déconnexion</a>
+        </nav>
+    </aside>
+
+    <div class="app-main">
+        <div class="app-loading" id="appLoading"></div>
+        <div class="app-content" id="appContent"></div>
+    </div>
+
+    <script th:inline="javascript">
+        const INITIAL_PATH = /*[[${initialPath}]]*/ window.location.pathname;
+        const ROLE = /*[[${userRole}]]*/ '';
+        const USER_NOM = /*[[${session.userNom}]]*/ '';
+    </script>
+
+    <script>
+        (function() {
+            const contentEl = document.getElementById('appContent');
+            const loadingEl = document.getElementById('appLoading');
+            const navEl = document.getElementById('appNav');
+            const brandEl = document.getElementById('appBrand');
+
+            function roleLabel(role) {
+                switch ((role || '').toUpperCase()) {
+                    case 'ADMIN': return 'Hôpital Admin';
+                    case 'SECRETAIRE': return 'Secrétariat';
+                    case 'MEDECIN': return 'Médecin';
+                    case 'PATIENT': return 'Patient';
+                    default: return 'Hôpital';
+                }
+            }
+
+            function applyRoleVisibility() {
+                const links = navEl.querySelectorAll('a[data-nav="1"]');
+                links.forEach(a => {
+                    const roles = (a.getAttribute('data-roles') || '').split(',').map(s => s.trim()).filter(Boolean);
+                    if (roles.length === 0) {
+                        a.style.display = '';
+                        return;
+                    }
+                    a.style.display = roles.includes((ROLE || '').toUpperCase()) ? '' : 'none';
+                });
+
+                if (brandEl && (!brandEl.textContent || brandEl.textContent.trim() === '' || brandEl.textContent.trim() === 'Hôpital')) {
+                    const base = roleLabel(ROLE);
+                    const nom = (USER_NOM || '').trim();
+                    brandEl.textContent = nom ? (base + ' : ' + nom) : base;
+                }
+            }
+
+            function setLoading(isLoading) {
+                loadingEl.style.display = isLoading ? 'block' : 'none';
+            }
+
+            function markActive(pathname) {
+                const links = navEl.querySelectorAll('a[data-nav="1"]');
+                links.forEach(a => {
+                    try {
+                        const url = new URL(a.getAttribute('href'), window.location.origin);
+                        a.classList.toggle('is-active', url.pathname === pathname);
+                    } catch (e) {
+                        a.classList.remove('is-active');
+                    }
+                });
+            }
+
+            function clearInjectedAssets() {
+                document.querySelectorAll('style[data-app-page-style="1"]').forEach(el => el.remove());
+            }
+
+            function injectStylesFrom(doc) {
+                const styles = doc.querySelectorAll('head style');
+                styles.forEach((style) => {
+                    const cloned = document.createElement('style');
+                    cloned.setAttribute('data-app-page-style', '1');
+                    cloned.textContent = style.textContent || '';
+                    document.head.appendChild(cloned);
+                });
+            }
+
+            function runScriptsFrom(container, doc) {
+                const scripts = doc.querySelectorAll('body script');
+                scripts.forEach((s) => {
+                    const ns = document.createElement('script');
+                    if (s.src) {
+                        ns.src = s.src;
+                    } else {
+                        ns.textContent = s.textContent || '';
+                    }
+                    container.appendChild(ns);
+                });
+            }
+
+            async function load(path, push) {
+                setLoading(true);
+                try {
+                    const res = await fetch(path, { headers: { 'X-App-Fragment': '1' } });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                    const title = doc.querySelector('title');
+                    if (title && title.textContent) document.title = title.textContent;
+
+                    clearInjectedAssets();
+                    injectStylesFrom(doc);
+
+                    const main = doc.querySelector('#app-main') || doc.body;
+                    contentEl.innerHTML = main ? main.innerHTML : html;
+                    runScriptsFrom(contentEl, doc);
+
+                    markActive(new URL(path, window.location.origin).pathname);
+                    if (push) history.pushState({ path }, '', path);
+                } catch (e) {
+                    contentEl.innerHTML = '<div style="background:white; padding:20px; border-radius:12px;">Erreur de chargement: ' + (e.message || 'inconnue') + '</div>';
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            navEl.addEventListener('click', (e) => {
+                const a = e.target.closest('a[data-nav="1"]');
+                if (!a) return;
+                e.preventDefault();
+                load(a.getAttribute('href'), true);
+            });
+
+            window.addEventListener('popstate', () => {
+                load(window.location.pathname + window.location.search, false);
+            });
+
+            applyRoleVisibility();
+            load(INITIAL_PATH + window.location.search, false);
+        })();
+    </script>
+</body>
+</html>

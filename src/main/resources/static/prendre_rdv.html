@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planifier un Rendez-vous - Self-Service</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f4f8; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            max-width: 450px; 
+            width: 100%; 
+            border-top: 5px solid #0087d1;
+        }
+        h3 { color: #2c3e50; margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 20px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #34495e; }
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #dcdde1; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 14px;
+        }
+        textarea { height: 100px; resize: none; }
+        .btn-action { 
+            background-color: #0087d1; 
+            color: white; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: 0.3s; 
+        }
+        .btn-action:hover { background-color: #0076b6; transform: scale(1.02); }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 13px; }
+        .back-link:hover { color: #34495e; text-decoration: underline; }
+        select { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>📅 Planifier un nouveau Rendez-vous</h3>
+        <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 20px;">
+            Service disponible 24h/24 connecté à <strong>Aiven SQL</strong>.
+        </p>
+
+        <form th:action="@{/api/patient/rdv/save}" method="POST">
+            <div class="form-group">
+                <label>Médecin souhaité (optionnel) :</label>
+                <select name="medecinId" id="medecinId">
+                    <option value="">-- La secrétaire assignera --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date et Heure souhaitée :</label>
+                <input type="datetime-local" name="dateHeure" required>
+            </div>
+            <div class="form-group">
+                <label>Motif de la consultation :</label>
+                <textarea name="motif" placeholder="Ex: grippe, consultation de routine..." required></textarea>
+            </div>
+            <button type="submit" class="btn-action">Confirmer le Rendez-vous</button>
+        </form>
+        
+    </div>
+    <script>
+        (async function() {
+            try {
+                const r = await fetch('/api/medecins');
+                const medecins = await r.json();
+                const sel = document.getElementById('medecinId');
+                medecins.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = (m.nom || '') + ' ' + (m.prenom || '') + (m.specialite ? ' - ' + m.specialite : '');
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.warn('Medecins non chargés', e); }
+        })();
+    </script>
+</body>
+</html>

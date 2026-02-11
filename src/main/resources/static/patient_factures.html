@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes factures</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #3498db; color: white; }
+        .back { display: inline-block; margin-bottom: 15px; color: #3498db; text-decoration: none; }
+        .back:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="container">
+        <h1>Mes factures</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="f : ${factures}">
+                    <td th:text="${#temporals.format(f.dateEmission, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${f.montant + ' DH'}"></td>
+                    <td th:text="${f.statut}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(factures)}">
+                    <td colspan="3" style="text-align:center; color:#7f8c8d;">Aucune facture.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hôpital Admin - Gestion</title>
+    <style>
+        :root { --sidebar-bg: #2c3e50; --active-blue: #3498db; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f9; }
+        .main-content { flex-grow: 1; padding: 40px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        .btn-edit { color: var(--warning); cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .btn-delete { color: var(--danger); font-weight: bold; text-decoration: none; }
+        .stat-number { font-size: 32px; font-weight: bold; color: var(--active-blue); }
+    </style>
+</head>
+<body>
+
+    <div id="app-main" class="main-content">
+        <h1>Tableau de Bord Administratif</h1>
+
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
+            <div class="card" style="text-align:center;">
+                <h4>Patients</h4>
+                <div class="stat-number" th:text="${countPatients}">0</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Médecins</h4>
+                <div class="stat-number" th:text="${countMedecins}">0</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>RDV du jour</h4>
+                <div class="stat-number" th:text="${countRdv}">0</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Consultations</h4>
+                <div class="stat-number" th:text="${countConsultations}">0</div>
+            </div>
+            <div class="card" style="text-align:center;">
+                <h4>Revenus (DH)</h4>
+                <div class="stat-number" th:text="${#numbers.formatDecimal(sumRevenus, 1, 'POINT', 2, 'COMMA')}">0</div>
+            </div>
+        </div>
+
+        <div class="card" id="formCard">
+            <h3 id="formTitle">➕ Ajouter / Modifier Utilisateur</h3>
+            <form th:action="@{/admin/saveUser}" method="POST" id="userForm">
+                <input type="hidden" name="id" id="userId">
+                <div class="form-grid">
+                    <input type="text" name="nom" id="userNom" placeholder="Nom" required>
+                    <input type="text" name="prenom" id="userPrenom" placeholder="Prénom" required>
+                    <input type="email" name="email" id="userEmail" placeholder="Email" required>
+                    <input type="password" name="motDePasse" id="userPass" placeholder="Mot de passe" required>
+                    <select name="typeUser" id="userRole">
+                        <option value="MEDECIN">Médecin</option>
+                        <option value="SECRETAIRE">Secrétaire</option>
+                        <option value="ADMIN">Administrateur</option>
+                        <option value="PATIENT">Patient</option>
+                    </select>
+                    <input type="text" name="specialite" id="userSpec" placeholder="Spécialité (médecin)">
+                    <input type="text" name="numeroOrdre" id="userNumeroOrdre" placeholder="N° Ordre (médecin)">
+                </div>
+                <button type="submit" style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; width:100%; margin-top:15px; cursor:pointer; font-weight:bold;">Enregistrer</button>
+                <button type="button" onclick="resetForm()" style="width:100%; margin-top:5px; background:none; border:none; color:gray; cursor:pointer;">Annuler</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>👥 Liste des Comptes</h3>
+                <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="🔍 Rechercher..." style="width:250px; padding:8px; border:1px solid #ddd; border-radius:20px;">
+            </div>
+            <table id="usersTable">
+                <thead>
+                    <tr><th>Nom & Prénom</th><th>Email</th><th>Rôle</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${listeUsers}">
+                        <td th:text="${u.nom + ' ' + u.prenom}"></td>
+                        <td th:text="${u.email}"></td>
+                        <td th:text="${u.role}"></td>
+                        <td>
+                            <span class="btn-edit" 
+                                  th:data-id="${u.id}" th:data-nom="${u.nom}" 
+                                  th:data-prenom="${u.prenom}" th:data-email="${u.email}" 
+                                  th:data-role="${u.role}" 
+                                  th:data-specialite="${u.specialite}" th:data-numero-ordre="${u.numeroOrdre}"
+                                  onclick="editUser(this)">✏️</span>
+                            <a th:href="@{/admin/user/delete/{id}(id=${u.id})}" class="btn-delete" onclick="return confirm('Supprimer ?')">❌</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function filterUsers() {
+            let filter = document.getElementById("searchInput").value.toUpperCase();
+            let tr = document.getElementById("usersTable").getElementsByTagName("tr");
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td")[0];
+                tr[i].style.display = (td && td.innerText.toUpperCase().indexOf(filter) > -1) ? "" : "none";
+            }
+        }
+
+        function editUser(element) {
+            document.getElementById('userId').value = element.getAttribute('data-id');
+            document.getElementById('userNom').value = element.getAttribute('data-nom');
+            document.getElementById('userPrenom').value = element.getAttribute('data-prenom');
+            document.getElementById('userEmail').value = element.getAttribute('data-email');
+            document.getElementById('userRole').value = element.getAttribute('data-role');
+            document.getElementById('userSpec').value = element.getAttribute('data-specialite') || '';
+            document.getElementById('userNumeroOrdre').value = element.getAttribute('data-numero-ordre') || '';
+            document.getElementById('formTitle').innerText = "✏️ Modifier l'utilisateur";
+            document.getElementById('formCard').style.border = "2px solid var(--warning)";
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function resetForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = "";
+            document.getElementById('formTitle').innerText = "➕ Ajouter un nouvel Utilisateur";
+            document.getElementById('formCard').style.border = "none";
+        }
+    </script>
+</body>
+</html>

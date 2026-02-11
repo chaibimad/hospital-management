@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapports - Administration</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 0; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 800px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+        .kpi { background: #ecf0f1; padding: 20px; border-radius: 8px; text-align: center; }
+        .kpi h4 { margin: 0 0 8px 0; color: #7f8c8d; font-size: 14px; }
+        .kpi .value { font-size: 28px; font-weight: bold; color: #2c3e50; }
+        .btn-export { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #27ae60; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .btn-export:hover { background: #219a52; }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="card">
+        <h1>Rapports statistiques</h1>
+        <p>Indicateurs d'activité de la clinique. Exportez les données pour une analyse externe.</p>
+        <div class="kpi-grid">
+            <div class="kpi">
+                <h4>Nombre de patients</h4>
+                <div class="value" th:text="${countPatients}">0</div>
+            </div>
+            <div class="kpi">
+                <h4>Nombre de médecins</h4>
+                <div class="value" th:text="${countMedecins}">0</div>
+            </div>
+            <div class="kpi">
+                <h4>Rendez-vous (total)</h4>
+                <div class="value" th:text="${countRdv}">0</div>
+            </div>
+            <div class="kpi">
+                <h4>Consultations (total)</h4>
+                <div class="value" th:text="${countConsultations}">0</div>
+            </div>
+            <div class="kpi" style="grid-column: span 2;">
+                <h4>Revenus (factures payées, DH)</h4>
+                <div class="value" th:text="${#numbers.formatDecimal(sumRevenus, 1, 'POINT', 2, 'COMMA')}">0</div>
+            </div>
+        </div>
+        <a th:href="@{/admin/rapports/export}" class="btn-export">📥 Exporter en CSV</a>
+    </div>
+</body>
+</html>

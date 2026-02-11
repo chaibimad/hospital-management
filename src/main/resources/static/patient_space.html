@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Espace Santé - Patient</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+        .container { max-width: 1000px; margin: auto; }
+        
+        /* Header style */
+        .header { 
+            background: linear-gradient(135deg, #3498db, #2980b9); 
+            color: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* Grid for main actions */
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            text-align: center; 
+            transition: 0.3s; 
+            border: 1px solid #e1e8ed;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card span { font-size: 50px; margin-bottom: 15px; display: block; }
+        
+        .btn-action { 
+            display: inline-block; 
+            text-decoration: none; 
+            background: #3498db; 
+            color: white; 
+            padding: 12px 25px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            transition: 0.2s;
+        }
+        .btn-action:hover { background: #2980b9; }
+
+        /* Appointment Table Section */
+        .appointments-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { color: #7f8c8d; font-size: 14px; text-transform: uppercase; }
+        
+        .status-badge { 
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold; 
+            background: #f1c40f; 
+            color: white; 
+        }
+        .status-confirm { background: #2ecc71; }
+        .status-arrive { background: #27ae60; }
+        .status-annule { background: #95a5a6; }
+        .status-termine { background: #3498db; }
+        .btn-annuler { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-annuler:hover { background: #c0392b; }
+
+        .success-banner {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="container">
+        <div th:if="${param.success}" class="success-banner">
+            ✅ Votre demande de rendez-vous a bien été enregistrée dans Aiven SQL !
+        </div>
+
+        <div class="header">
+            <h1>Bonjour, <span th:text="${patient != null ? patient.nom + ' ' + patient.prenom : 'Patient'}">Patient</span> 👋</h1>
+            <p>Bienvenue dans votre portail de santé en ligne (Self-Service).</p>
+        </div>
+
+        <div class="action-grid">
+            <div class="card">
+                <span>📅</span>
+                <h3>Planifier une visite</h3>
+                <p>Prenez un rendez-vous directement avec nos spécialistes sans attendre.</p>
+                <a th:href="@{/prendre_rdv.html}" class="btn-action">Prendre RDV</a>
+            </div>
+
+            <div class="card">
+                <span>📁</span>
+                <h3>Dossier Médical</h3>
+                <p>Consultez vos antécédents, vos allergies et vos traitements en cours.</p>
+                <a th:href="@{/patient/dossier}" class="btn-action" style="background: #2ecc71;">Consulter mon dossier</a>
+            </div>
+
+            <div class="card">
+                <span>🧾</span>
+                <h3>Mes ordonnances</h3>
+                <p>Accédez à vos prescriptions rédigées par le médecin.</p>
+                <a th:href="@{/patient/ordonnances}" class="btn-action" style="background: #16a085;">Voir mes ordonnances</a>
+            </div>
+            <div class="card">
+                <span>💰</span>
+                <h3>Mes factures</h3>
+                <p>Historique des factures et statut de paiement.</p>
+                <a th:href="@{/patient/factures}" class="btn-action" style="background: #9b59b6;">Voir mes factures</a>
+            </div>
+            <div class="card">
+                <span>✏️</span>
+                <h3>Mes informations</h3>
+                <p>Modifier adresse, téléphone, email.</p>
+                <a th:href="@{/patient/profil}" class="btn-action" style="background: #e67e22;">Modifier mes infos</a>
+            </div>
+        </div>
+
+        <div class="appointments-section">
+            <h3>🕒 Mes prochains rendez-vous</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date & Heure</th>
+                        <th>Médecin</th>
+                        <th>Motif</th>
+                        <th>Statut</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rdv : ${rdvs}">
+                        <td th:text="${#temporals.format(rdv.dateHeure, 'dd/MM/yyyy HH:mm')}">--/--/----</td>
+                        <td th:text="${rdv.medecin != null ? rdv.medecin.nom + ' ' + rdv.medecin.prenom : 'Non assigné'}">-</td>
+                        <td th:text="${rdv.motif}">Motif inconnu</td>
+                        <td>
+                            <span th:class="${rdv.statut == 'CONFIRMÉ' ? 'status-badge status-confirm' : (rdv.statut == 'ARRIVE' ? 'status-badge status-arrive' : (rdv.statut == 'ANNULE' ? 'status-badge status-annule' : (rdv.statut == 'TERMINE' ? 'status-badge status-termine' : 'status-badge')))}" 
+                                  th:text="${rdv.statut}">EN ATTENTE</span>
+                        </td>
+                        <td>
+                            <button th:if="${rdv.statut != 'ANNULE' and rdv.statut != 'TERMINE'}" type="button" class="btn-annuler" th:data-id="${rdv.id}" onclick="annulerRdv(this)">Annuler ce RDV</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${rdvs == null or #lists.isEmpty(rdvs)}">
+                        <td colspan="5" style="text-align: center; color: #95a5a6; padding: 20px;">Vous n'avez aucun rendez-vous planifié.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        
+    </div>
+    <script>
+        async function annulerRdv(btn) {
+            if (!confirm('Annuler ce rendez-vous ?')) return;
+            const id = btn.getAttribute('data-id');
+            try {
+                const r = await fetch('/api/patient/rdv/' + id + '/annuler', { method: 'PUT' });
+                if (!r.ok) throw new Error('Erreur');
+                window.location.reload();
+            } catch (e) {
+                alert('Impossible d\'annuler le rendez-vous.');
+            }
+        }
+    </script>
+</body>
+</html>

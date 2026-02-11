@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordonnance</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 0; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 22px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e1e8ed; margin-bottom: 18px; }
+        h2, h3 { margin: 0 0 12px 0; }
+        .meta { color:#7f8c8d; }
+        label { display:block; margin-top: 12px; font-weight: 700; color: #2c3e50; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        .btn { display:inline-block; padding: 10px 14px; background: #3498db; color: white; text-decoration:none; border-radius: 8px; border: none; cursor:pointer; font-weight: 800; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background:#2ecc71; }
+        .btn-success:hover { background:#27ae60; }
+        table { width:100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align:left; }
+        th { color:#7f8c8d; font-size: 12px; text-transform: uppercase; }
+        .success { background:#d4edda; color:#155724; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div id="app-main" class="container">
+        <div class="card">
+            <h2>🧾 Ordonnance</h2>
+            <div class="meta" th:if="${consultation != null}">
+                Consultation #<span th:text="${consultation.id}">0</span>
+                — <span th:text="${#temporals.format(consultation.date, 'dd/MM/yyyy HH:mm')}">--</span>
+            </div>
+            <div class="meta" th:if="${patient != null}" style="margin-top:6px;">
+                Patient: <strong th:text="${'#' + patient.id + ' - ' + patient.nom + ' ' + patient.prenom}">Patient</strong>
+            </div>
+
+            <div th:if="${param.success}" class="success">Ordonnance enregistrée.</div>
+
+            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn" th:href="@{/medecin/agenda}">← Retour agenda</a>
+                <a class="btn" th:if="${patient != null}" th:href="@{/medecin/patient/{id}/dossier(id=${patient.id})}">📁 Ouvrir dossier patient</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>➕ Ajouter une prescription</h3>
+            <form th:action="@{/medecin/consultation/{id}/ordonnance/add(id=${consultation.id})}" method="post">
+                <label>Médicaments</label>
+                <input type="text" name="medicaments" placeholder="Ex: Paracétamol" required>
+
+                <label>Posologie</label>
+                <input type="text" name="posologie" placeholder="Ex: 1 comprimé x 3/jour">
+
+                <label>Durée (jours)</label>
+                <input type="number" name="dureeTraitement" min="0" value="0">
+
+                <button type="submit" class="btn btn-success" style="margin-top:14px;">Valider (Signature numérique)</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>📄 Prescriptions enregistrées</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Médicaments</th>
+                        <th>Posologie</th>
+                        <th>Durée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${prescriptions}">
+                        <td th:text="${p.medicaments}">-</td>
+                        <td th:text="${p.posologie}">-</td>
+                        <td th:text="${p.dureeTraitement + ' jours'}">-</td>
+                    </tr>
+                    <tr th:if="${prescriptions == null or #lists.isEmpty(prescriptions)}">
+                        <td colspan="3" style="text-align:center; color:#95a5a6; padding:16px;">Aucune prescription.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
